@@ -48,7 +48,7 @@ static IAsyncAction OnClickAccept(
 // Function to create the Edit Shortcuts Window
 void createEditShortcutsWindow(HINSTANCE hInst, KeyboardManagerState& keyboardManagerState)
 {
-    Logger::trace("Creating Remap shortcuts window");
+    Logger::warn("Creating Remap shortcuts window");
 
     // Window Registration
     const wchar_t szWindowClass[] = L"EditShortcutsWindow";
@@ -263,13 +263,23 @@ void createEditShortcutsWindow(HINSTANCE hInst, KeyboardManagerState& keyboardMa
     addShortcut.Content(plusSymbol);
     addShortcut.Margin({ 10, 10, 0, 25 });
     addShortcut.Click([&](winrt::Windows::Foundation::IInspectable const& sender, RoutedEventArgs const&) {
-        ShortcutControl::AddNewShortcutControlRow(shortcutTable, keyboardRemapControlObjects);
+        try
+        {
+            Logger::warn("Add shortcut callback");
+            ShortcutControl::AddNewShortcutControlRow(shortcutTable, keyboardRemapControlObjects);
 
-        // Whenever a remap is added move to the bottom of the screen
-        scrollViewer.ChangeView(nullptr, scrollViewer.ScrollableHeight(), nullptr);
+            // Whenever a remap is added move to the bottom of the screen
+            Logger::warn("Before scrollViewer.ChangeView");
+            scrollViewer.ChangeView(nullptr, scrollViewer.ScrollableHeight(), nullptr);
 
-        // Set focus to the first Type Button in the newly added row
-        UIHelpers::SetFocusOnTypeButtonInLastRow(shortcutTable, KeyboardManagerConstants::ShortcutTableColCount);
+            // Set focus to the first Type Button in the newly added row
+            Logger::warn("Before UIHelpers::SetFocusOnTypeButtonInLastRow");
+            UIHelpers::SetFocusOnTypeButtonInLastRow(shortcutTable, KeyboardManagerConstants::ShortcutTableColCount);        
+        }
+        catch (...)
+        {
+            Logger::error("{} {}", __FILE__, __LINE__);
+        }
     });
 
     // Set accessible name for the add shortcut button

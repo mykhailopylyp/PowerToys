@@ -70,190 +70,283 @@ void ShortcutControl::AddNewShortcutControlRow(StackPanel& parent, std::vector<s
     // Create new ShortcutControl objects dynamically so that we does not get destructed
     std::vector<std::unique_ptr<ShortcutControl>> newrow;
     StackPanel row = StackPanel();
-    parent.Children().Append(row);
-    newrow.emplace_back(std::make_unique<ShortcutControl>(parent, row, 0, targetAppTextBox));
-    newrow.emplace_back(std::make_unique<ShortcutControl>(parent, row, 1, targetAppTextBox));
-    keyboardRemapControlObjects.push_back(std::move(newrow));
-
-    row.Padding({ 10, 10, 10, 10 });
-    row.Orientation(Orientation::Horizontal);
-    auto brush = Windows::UI::Xaml::Application::Current().Resources().Lookup(box_value(L"SystemControlBackgroundListLowBrush")).as<Windows::UI::Xaml::Media::SolidColorBrush>();
-    if (keyboardRemapControlObjects.size() % 2)
+    try
     {
-        row.Background(brush);
+        parent.Children().Append(row);
+        newrow.emplace_back(std::make_unique<ShortcutControl>(parent, row, 0, targetAppTextBox));
+        newrow.emplace_back(std::make_unique<ShortcutControl>(parent, row, 1, targetAppTextBox));
+        keyboardRemapControlObjects.push_back(std::move(newrow));
+        row.Padding({ 10, 10, 10, 10 });
+        row.Orientation(Orientation::Horizontal);
+    }
+    catch (...)
+    {
+        Logger::error("{} {}", __FILE__, __LINE__);
+        throw -1;
+    }
+
+    Windows::UI::Xaml::Media::SolidColorBrush brush;
+
+    try
+    {
+        brush = Windows::UI::Xaml::Application::Current().Resources().Lookup(box_value(L"SystemControlBackgroundListLowBrush")).as<Windows::UI::Xaml::Media::SolidColorBrush>();
+        if (keyboardRemapControlObjects.size() % 2)
+        {
+            row.Background(brush);
+        }
+    }
+    catch (...)
+    {
+        Logger::error("{} {}", __FILE__, __LINE__);
+        throw -1;
     }
 
     // ShortcutControl for the original shortcut
-    auto origin = keyboardRemapControlObjects.back()[0]->getShortcutControl();
-    origin.Width(KeyboardManagerConstants::ShortcutOriginColumnWidth);
-    row.Children().Append(origin);
-
+    StackPanel origin;
+    try
+    {
+        origin = keyboardRemapControlObjects.back()[0]->getShortcutControl();
+        origin.Width(KeyboardManagerConstants::ShortcutOriginColumnWidth);
+        row.Children().Append(origin);
+    }
+    catch (...)
+    {
+        Logger::error("{} {}", __FILE__, __LINE__);
+        throw -1;
+    }
+    
     // Arrow icon
     FontIcon arrowIcon;
-    arrowIcon.FontFamily(Xaml::Media::FontFamily(L"Segoe MDL2 Assets"));
-    arrowIcon.Glyph(L"\xE72A");
-    arrowIcon.VerticalAlignment(VerticalAlignment::Center);
-    arrowIcon.HorizontalAlignment(HorizontalAlignment::Center);
-    auto arrowIconContainer = KeyboardManagerHelper::GetWrapped(arrowIcon, KeyboardManagerConstants::ShortcutArrowColumnWidth).as<StackPanel>();
-    arrowIconContainer.Orientation(Orientation::Vertical);
-    arrowIconContainer.VerticalAlignment(VerticalAlignment::Center);
-    row.Children().Append(arrowIconContainer);
+    StackPanel arrowIconContainer;
+    try
+    {
+        arrowIcon.FontFamily(Xaml::Media::FontFamily(L"Segoe MDL2 Assets"));
+        arrowIcon.Glyph(L"\xE72A");
+        arrowIcon.VerticalAlignment(VerticalAlignment::Center);
+        arrowIcon.HorizontalAlignment(HorizontalAlignment::Center);
+        arrowIconContainer = KeyboardManagerHelper::GetWrapped(arrowIcon, KeyboardManagerConstants::ShortcutArrowColumnWidth).as<StackPanel>();
+        arrowIconContainer.Orientation(Orientation::Vertical);
+        arrowIconContainer.VerticalAlignment(VerticalAlignment::Center);
+        row.Children().Append(arrowIconContainer);    
+    }
+    catch (...)
+    {
+        Logger::error("{} {}", __FILE__, __LINE__);
+        throw -1;
+    }
 
     // ShortcutControl for the new shortcut
-    auto target = keyboardRemapControlObjects.back()[1]->getShortcutControl();
-    target.Width(KeyboardManagerConstants::ShortcutTargetColumnWidth);
-    row.Children().Append(target);
+    StackPanel target;
+    try
+    {
+        target = keyboardRemapControlObjects.back()[1]->getShortcutControl();
+        target.Width(KeyboardManagerConstants::ShortcutTargetColumnWidth);
+        row.Children().Append(target);
 
-    targetAppTextBox.Width(KeyboardManagerConstants::ShortcutTableDropDownWidth);
-    targetAppTextBox.PlaceholderText(KeyboardManagerConstants::DefaultAppName);
-    targetAppTextBox.Text(targetAppName);
+        targetAppTextBox.Width(KeyboardManagerConstants::ShortcutTableDropDownWidth);
+        targetAppTextBox.PlaceholderText(KeyboardManagerConstants::DefaultAppName);
+        targetAppTextBox.Text(targetAppName);
 
-    // GotFocus handler will be called whenever the user tabs into or clicks on the textbox
-    targetAppTextBox.GotFocus([targetAppTextBox](auto const& sender, auto const& e) {
-        // Select all text for accessible purpose
-        targetAppTextBox.SelectAll();
-    });
+        // GotFocus handler will be called whenever the user tabs into or clicks on the textbox
+        targetAppTextBox.GotFocus([targetAppTextBox](auto const& sender, auto const& e) {
+            // Select all text for accessible purpose
+            targetAppTextBox.SelectAll();
+        });
 
-    // LostFocus handler will be called whenever text is updated by a user and then they click something else or tab to another control. Does not get called if Text is updated while the TextBox isn't in focus (i.e. from code)
-    targetAppTextBox.LostFocus([&keyboardRemapControlObjects, parent, row, targetAppTextBox](auto const& sender, auto const& e) {
-        // Get index of targetAppTextBox button
-        uint32_t rowIndex;
-        if (!parent.Children().IndexOf(row, rowIndex))
-        {
-            return;
-        }
+        // LostFocus handler will be called whenever text is updated by a user and then they click something else or tab to another control. Does not get called if Text is updated while the TextBox isn't in focus (i.e. from code)
+        targetAppTextBox.LostFocus([&keyboardRemapControlObjects, parent, row, targetAppTextBox](auto const& sender, auto const& e) {
+            // Get index of targetAppTextBox button
+            uint32_t rowIndex;
+            if (!parent.Children().IndexOf(row, rowIndex))
+            {
+                return;
+            }
 
-        // rowIndex could be out of bounds if the the row got deleted after LostFocus handler was invoked. In this case it should return
-        if (rowIndex >= keyboardRemapControlObjects.size())
-        {
-            return;
-        }
+            // rowIndex could be out of bounds if the the row got deleted after LostFocus handler was invoked. In this case it should return
+            if (rowIndex >= keyboardRemapControlObjects.size())
+            {
+                return;
+            }
 
-        // Validate both set of drop downs
-        KeyDropDownControl::ValidateShortcutFromDropDownList(parent, row, keyboardRemapControlObjects[rowIndex][0]->shortcutDropDownStackPanel.as<StackPanel>(), 0, ShortcutControl::shortcutRemapBuffer, keyboardRemapControlObjects[rowIndex][0]->keyDropDownControlObjects, targetAppTextBox, false, false);
-        KeyDropDownControl::ValidateShortcutFromDropDownList(parent, row, keyboardRemapControlObjects[rowIndex][1]->shortcutDropDownStackPanel.as<StackPanel>(), 1, ShortcutControl::shortcutRemapBuffer, keyboardRemapControlObjects[rowIndex][1]->keyDropDownControlObjects, targetAppTextBox, true, false);
+            // Validate both set of drop downs
+            KeyDropDownControl::ValidateShortcutFromDropDownList(parent, row, keyboardRemapControlObjects[rowIndex][0]->shortcutDropDownStackPanel.as<StackPanel>(), 0, ShortcutControl::shortcutRemapBuffer, keyboardRemapControlObjects[rowIndex][0]->keyDropDownControlObjects, targetAppTextBox, false, false);
+            KeyDropDownControl::ValidateShortcutFromDropDownList(parent, row, keyboardRemapControlObjects[rowIndex][1]->shortcutDropDownStackPanel.as<StackPanel>(), 1, ShortcutControl::shortcutRemapBuffer, keyboardRemapControlObjects[rowIndex][1]->keyDropDownControlObjects, targetAppTextBox, true, false);
 
-        // Reset the buffer based on the selected drop down items
-        std::get<Shortcut>(shortcutRemapBuffer[rowIndex].first[0]).SetKeyCodes(KeyDropDownControl::GetSelectedCodesFromStackPanel(keyboardRemapControlObjects[rowIndex][0]->shortcutDropDownStackPanel.as<StackPanel>()));
-        // second column is a hybrid column
+            // Reset the buffer based on the selected drop down items
+            std::get<Shortcut>(shortcutRemapBuffer[rowIndex].first[0]).SetKeyCodes(KeyDropDownControl::GetSelectedCodesFromStackPanel(keyboardRemapControlObjects[rowIndex][0]->shortcutDropDownStackPanel.as<StackPanel>()));
+            // second column is a hybrid column
 
-        std::vector<int32_t> selectedKeyCodes = KeyDropDownControl::GetSelectedCodesFromStackPanel(keyboardRemapControlObjects[rowIndex][1]->shortcutDropDownStackPanel.as<StackPanel>());
+            std::vector<int32_t> selectedKeyCodes = KeyDropDownControl::GetSelectedCodesFromStackPanel(keyboardRemapControlObjects[rowIndex][1]->shortcutDropDownStackPanel.as<StackPanel>());
 
-        // If exactly one key is selected consider it to be a key remap
-        if (selectedKeyCodes.size() == 1)
-        {
-            shortcutRemapBuffer[rowIndex].first[1] = selectedKeyCodes[0];
-        }
-        else
-        {
-            Shortcut tempShortcut;
-            tempShortcut.SetKeyCodes(selectedKeyCodes);
-            // Assign instead of setting the value in the buffer since the previous value may not be a Shortcut
-            shortcutRemapBuffer[rowIndex].first[1] = tempShortcut;
-        }
-        std::wstring newText = targetAppTextBox.Text().c_str();
-        std::wstring lowercaseDefAppName = KeyboardManagerConstants::DefaultAppName;
-        std::transform(newText.begin(), newText.end(), newText.begin(), towlower);
-        std::transform(lowercaseDefAppName.begin(), lowercaseDefAppName.end(), lowercaseDefAppName.begin(), towlower);
-        if (newText == lowercaseDefAppName)
-        {
-            shortcutRemapBuffer[rowIndex].second = L"";
-        }
-        else
-        {
-            shortcutRemapBuffer[rowIndex].second = targetAppTextBox.Text().c_str();
-        }
+            // If exactly one key is selected consider it to be a key remap
+            if (selectedKeyCodes.size() == 1)
+            {
+                shortcutRemapBuffer[rowIndex].first[1] = selectedKeyCodes[0];
+            }
+            else
+            {
+                Shortcut tempShortcut;
+                tempShortcut.SetKeyCodes(selectedKeyCodes);
+                // Assign instead of setting the value in the buffer since the previous value may not be a Shortcut
+                shortcutRemapBuffer[rowIndex].first[1] = tempShortcut;
+            }
+            std::wstring newText = targetAppTextBox.Text().c_str();
+            std::wstring lowercaseDefAppName = KeyboardManagerConstants::DefaultAppName;
+            std::transform(newText.begin(), newText.end(), newText.begin(), towlower);
+            std::transform(lowercaseDefAppName.begin(), lowercaseDefAppName.end(), lowercaseDefAppName.begin(), towlower);
+            if (newText == lowercaseDefAppName)
+            {
+                shortcutRemapBuffer[rowIndex].second = L"";
+            }
+            else
+            {
+                shortcutRemapBuffer[rowIndex].second = targetAppTextBox.Text().c_str();
+            }
 
-        // To set the accessibile name of the target app text box when focus is lost
-        ShortcutControl::SetAccessibleNameForTextBox(targetAppTextBox, rowIndex + 1);
-    });
+            // To set the accessibile name of the target app text box when focus is lost
+            ShortcutControl::SetAccessibleNameForTextBox(targetAppTextBox, rowIndex + 1);
+        });    
+    }
+    catch (...)
+    {
+        Logger::error("{} {}", __FILE__, __LINE__);
+        throw -1;
+    }
 
     // We need two containers in order to align it horizontally and vertically
-    StackPanel targetAppHorizontal = KeyboardManagerHelper::GetWrapped(targetAppTextBox, KeyboardManagerConstants::TableTargetAppColWidth).as<StackPanel>();
-    targetAppHorizontal.Orientation(Orientation::Horizontal);
-    targetAppHorizontal.HorizontalAlignment(HorizontalAlignment::Left);
-    StackPanel targetAppContainer = KeyboardManagerHelper::GetWrapped(targetAppHorizontal, KeyboardManagerConstants::TableTargetAppColWidth).as<StackPanel>();
-    targetAppContainer.Orientation(Orientation::Vertical);
-    targetAppContainer.VerticalAlignment(VerticalAlignment::Bottom);
-    row.Children().Append(targetAppContainer);
+    StackPanel targetAppHorizontal;
+    StackPanel targetAppContainer;
+    try
+    {
+        targetAppHorizontal = KeyboardManagerHelper::GetWrapped(targetAppTextBox, KeyboardManagerConstants::TableTargetAppColWidth).as<StackPanel>();
+        targetAppHorizontal.Orientation(Orientation::Horizontal);
+        targetAppHorizontal.HorizontalAlignment(HorizontalAlignment::Left);
+        targetAppContainer = KeyboardManagerHelper::GetWrapped(targetAppHorizontal, KeyboardManagerConstants::TableTargetAppColWidth).as<StackPanel>();
+        targetAppContainer.Orientation(Orientation::Vertical);
+        targetAppContainer.VerticalAlignment(VerticalAlignment::Bottom);
+        row.Children().Append(targetAppContainer);
+    }
+    catch (...)
+    {
+        Logger::error("{} {}", __FILE__, __LINE__);
+        throw -1;
+    }
 
     // Delete row button
     Windows::UI::Xaml::Controls::Button deleteShortcut;
     FontIcon deleteSymbol;
-    deleteSymbol.FontFamily(Xaml::Media::FontFamily(L"Segoe MDL2 Assets"));
-    deleteSymbol.Glyph(L"\xE74D");
-    deleteShortcut.Content(deleteSymbol);
-    deleteShortcut.Background(Media::SolidColorBrush(Colors::Transparent()));
-    deleteShortcut.HorizontalAlignment(HorizontalAlignment::Center);
-    deleteShortcut.Click([&, parent, row, brush](winrt::Windows::Foundation::IInspectable const& sender, RoutedEventArgs const&) {
-        Button currentButton = sender.as<Button>();
-        uint32_t rowIndex;
-        // Get index of delete button
-        UIElementCollection children = parent.Children();
-        bool indexFound = children.IndexOf(row, rowIndex);
+    try
+    {
+        deleteSymbol.FontFamily(Xaml::Media::FontFamily(L"Segoe MDL2 Assets"));
+        deleteSymbol.Glyph(L"\xE74D");
+        deleteShortcut.Content(deleteSymbol);
+        deleteShortcut.Background(Media::SolidColorBrush(Colors::Transparent()));
+        deleteShortcut.HorizontalAlignment(HorizontalAlignment::Center);
+        deleteShortcut.Click([&, parent, row, brush](winrt::Windows::Foundation::IInspectable const& sender, RoutedEventArgs const&) {
+            Button currentButton = sender.as<Button>();
+            uint32_t rowIndex;
+            // Get index of delete button
+            UIElementCollection children = parent.Children();
+            bool indexFound = children.IndexOf(row, rowIndex);
 
-        // IndexOf could fail if the the row got deleted and the button handler was invoked twice. In this case it should return
-        if (!indexFound)
-        {
-            return;
-        }
+            // IndexOf could fail if the the row got deleted and the button handler was invoked twice. In this case it should return
+            if (!indexFound)
+            {
+                return;
+            }
 
-        for (uint32_t i = rowIndex + 1; i < children.Size(); i++)
-        {
-            StackPanel row = children.GetAt(i).as<StackPanel>();
-            row.Background(i % 2 ? brush : Media::SolidColorBrush(Colors::Transparent()));
-            StackPanel sourceCol = row.Children().GetAt(0).as<StackPanel>();
-            StackPanel targetCol = row.Children().GetAt(2).as<StackPanel>();
-            TextBox targetApp = row.Children().GetAt(3).as<StackPanel>().Children().GetAt(0).as<StackPanel>().Children().GetAt(0).as<TextBox>();
-            Button delButton = row.Children().GetAt(4).as<StackPanel>().Children().GetAt(0).as<Button>();
-            UpdateAccessibleNames(sourceCol, targetCol, targetApp, delButton, i);
-        }
+            for (uint32_t i = rowIndex + 1; i < children.Size(); i++)
+            {
+                StackPanel row = children.GetAt(i).as<StackPanel>();
+                row.Background(i % 2 ? brush : Media::SolidColorBrush(Colors::Transparent()));
+                StackPanel sourceCol = row.Children().GetAt(0).as<StackPanel>();
+                StackPanel targetCol = row.Children().GetAt(2).as<StackPanel>();
+                TextBox targetApp = row.Children().GetAt(3).as<StackPanel>().Children().GetAt(0).as<StackPanel>().Children().GetAt(0).as<TextBox>();
+                Button delButton = row.Children().GetAt(4).as<StackPanel>().Children().GetAt(0).as<Button>();
+                UpdateAccessibleNames(sourceCol, targetCol, targetApp, delButton, i);
+            }
 
-        children.RemoveAt(rowIndex);
-        parent.UpdateLayout();
-        shortcutRemapBuffer.erase(shortcutRemapBuffer.begin() + rowIndex);
-        // delete the SingleKeyRemapControl objects so that they get destructed
-        keyboardRemapControlObjects.erase(keyboardRemapControlObjects.begin() + rowIndex);
-    });
+            children.RemoveAt(rowIndex);
+            parent.UpdateLayout();
+            shortcutRemapBuffer.erase(shortcutRemapBuffer.begin() + rowIndex);
+            // delete the SingleKeyRemapControl objects so that they get destructed
+            keyboardRemapControlObjects.erase(keyboardRemapControlObjects.begin() + rowIndex);
+        });
 
-    // To set the accessible name of the delete button
-    deleteShortcut.SetValue(Automation::AutomationProperties::NameProperty(), box_value(GET_RESOURCE_STRING(IDS_DELETE_REMAPPING_BUTTON)));
+        // To set the accessible name of the delete button
+        deleteShortcut.SetValue(Automation::AutomationProperties::NameProperty(), box_value(GET_RESOURCE_STRING(IDS_DELETE_REMAPPING_BUTTON)));
+    }
+    catch (...)
+    {
+        Logger::error("{} {}", __FILE__, __LINE__);
+        throw -1;
+    }
 
     // Add tooltip for delete button which would appear on hover
     ToolTip deleteShortcuttoolTip;
-    deleteShortcuttoolTip.Content(box_value(GET_RESOURCE_STRING(IDS_DELETE_REMAPPING_BUTTON)));
-    ToolTipService::SetToolTip(deleteShortcut, deleteShortcuttoolTip);
-
-    StackPanel deleteShortcutContainer = StackPanel();
-    deleteShortcutContainer.Children().Append(deleteShortcut);
-    deleteShortcutContainer.Orientation(Orientation::Vertical);
-    deleteShortcutContainer.VerticalAlignment(VerticalAlignment::Center);
-    row.Children().Append(deleteShortcutContainer);
-    parent.UpdateLayout();
-
-    // Set accessible names
-    UpdateAccessibleNames(keyboardRemapControlObjects[keyboardRemapControlObjects.size() - 1][0]->getShortcutControl(), keyboardRemapControlObjects[keyboardRemapControlObjects.size() - 1][1]->getShortcutControl(), targetAppTextBox, deleteShortcut, (int)keyboardRemapControlObjects.size());
-
-    // Set the shortcut text if the two vectors are not empty (i.e. default args)
-    if (originalKeys.IsValidShortcut() && !(newKeys.index() == 0 && std::get<DWORD>(newKeys) == NULL) && !(newKeys.index() == 1 && !std::get<Shortcut>(newKeys).IsValidShortcut()))
+    try
     {
-        // change to load app name
-        shortcutRemapBuffer.push_back(std::make_pair<RemapBufferItem, std::wstring>(RemapBufferItem{ Shortcut(), Shortcut() }, std::wstring(targetAppName)));
-        KeyDropDownControl::AddShortcutToControl(originalKeys, parent, keyboardRemapControlObjects[keyboardRemapControlObjects.size() - 1][0]->shortcutDropDownStackPanel.as<StackPanel>(), *keyboardManagerState, 0, keyboardRemapControlObjects[keyboardRemapControlObjects.size() - 1][0]->keyDropDownControlObjects, shortcutRemapBuffer, row, targetAppTextBox, false, false);
+        deleteShortcuttoolTip.Content(box_value(GET_RESOURCE_STRING(IDS_DELETE_REMAPPING_BUTTON)));
+        ToolTipService::SetToolTip(deleteShortcut, deleteShortcuttoolTip);
 
-        if (newKeys.index() == 0)
+        StackPanel deleteShortcutContainer = StackPanel();
+        deleteShortcutContainer.Children().Append(deleteShortcut);
+        deleteShortcutContainer.Orientation(Orientation::Vertical);
+        deleteShortcutContainer.VerticalAlignment(VerticalAlignment::Center);
+        row.Children().Append(deleteShortcutContainer);
+        parent.UpdateLayout();
+    }
+    catch (...)
+    {
+        Logger::error("{} {}", __FILE__, __LINE__);
+        throw -1;
+    }
+
+    try
+    {
+        // Set accessible names
+        UpdateAccessibleNames(keyboardRemapControlObjects[keyboardRemapControlObjects.size() - 1][0]->getShortcutControl(), keyboardRemapControlObjects[keyboardRemapControlObjects.size() - 1][1]->getShortcutControl(), targetAppTextBox, deleteShortcut, (int)keyboardRemapControlObjects.size());    
+    }
+    catch (...)
+    {
+        Logger::error("{} {}", __FILE__, __LINE__);
+        throw -1;
+    }
+
+    try
+    {
+        // Set the shortcut text if the two vectors are not empty (i.e. default args)
+        if (originalKeys.IsValidShortcut() && !(newKeys.index() == 0 && std::get<DWORD>(newKeys) == NULL) && !(newKeys.index() == 1 && !std::get<Shortcut>(newKeys).IsValidShortcut()))
         {
-            keyboardRemapControlObjects[keyboardRemapControlObjects.size() - 1][1]->keyDropDownControlObjects[0]->SetSelectedValue(std::to_wstring(std::get<DWORD>(newKeys)));
+            Logger::warn("{} {}", __FILE__, __LINE__);
+
+            // change to load app name
+            shortcutRemapBuffer.push_back(std::make_pair<RemapBufferItem, std::wstring>(RemapBufferItem{ Shortcut(), Shortcut() }, std::wstring(targetAppName)));
+            KeyDropDownControl::AddShortcutToControl(originalKeys, parent, keyboardRemapControlObjects[keyboardRemapControlObjects.size() - 1][0]->shortcutDropDownStackPanel.as<StackPanel>(), *keyboardManagerState, 0, keyboardRemapControlObjects[keyboardRemapControlObjects.size() - 1][0]->keyDropDownControlObjects, shortcutRemapBuffer, row, targetAppTextBox, false, false);
+
+            if (newKeys.index() == 0)
+            {
+                Logger::warn("{} {}", __FILE__, __LINE__);
+                keyboardRemapControlObjects[keyboardRemapControlObjects.size() - 1][1]->keyDropDownControlObjects[0]->SetSelectedValue(std::to_wstring(std::get<DWORD>(newKeys)));
+            }
+            else
+            {
+                Logger::warn("{} {}", __FILE__, __LINE__);
+                KeyDropDownControl::AddShortcutToControl(std::get<Shortcut>(newKeys), parent, keyboardRemapControlObjects.back()[1]->shortcutDropDownStackPanel.as<StackPanel>(), *keyboardManagerState, 1, keyboardRemapControlObjects[keyboardRemapControlObjects.size() - 1][1]->keyDropDownControlObjects, shortcutRemapBuffer, row, targetAppTextBox, true, false);
+            }
         }
         else
         {
-            KeyDropDownControl::AddShortcutToControl(std::get<Shortcut>(newKeys), parent, keyboardRemapControlObjects.back()[1]->shortcutDropDownStackPanel.as<StackPanel>(), *keyboardManagerState, 1, keyboardRemapControlObjects[keyboardRemapControlObjects.size() - 1][1]->keyDropDownControlObjects, shortcutRemapBuffer, row, targetAppTextBox, true, false);
+            Logger::warn("{} {}", __FILE__, __LINE__);
+
+            // Initialize both shortcuts as empty shortcuts
+            shortcutRemapBuffer.push_back(std::make_pair<RemapBufferItem, std::wstring>(RemapBufferItem{ Shortcut(), Shortcut() }, std::wstring(targetAppName)));
         }
     }
-    else
+    catch (...)
     {
-        // Initialize both shortcuts as empty shortcuts
-        shortcutRemapBuffer.push_back(std::make_pair<RemapBufferItem, std::wstring>(RemapBufferItem{ Shortcut(), Shortcut() }, std::wstring(targetAppName)));
+        Logger::error("{} {}", __FILE__, __LINE__);
+        throw -1;
     }
 }
 
