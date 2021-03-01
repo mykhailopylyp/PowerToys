@@ -44,6 +44,13 @@ namespace Microsoft.PowerToys.Settings.UI.OOBE.Views
             OpenMainWindowCallback = implementation;
         }
 
+        public static Action CloseOobeWindowCallback { get; set; }
+
+        public static void SetCloseOobeWindowCallback(Action implementation)
+        {
+            CloseOobeWindowCallback = implementation;
+        }
+
         /// <summary>
         /// Gets view model.
         /// </summary>
@@ -215,6 +222,11 @@ namespace Microsoft.PowerToys.Settings.UI.OOBE.Views
                 case "ShortcutGuide": NavigationFrame.Navigate(typeof(OobeShortcutGuide)); break;
                 case "VideoConference": NavigationFrame.Navigate(typeof(OobeVideoConference)); break;
             }
+        }
+
+        private void CloseButton_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        {
+            CloseOobeWindowCallback();
         }
     }
 }

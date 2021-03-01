@@ -4,6 +4,8 @@
 
 using System;
 using System.Windows;
+using System.Windows.Input;
+using Microsoft.PowerToys.Settings.UI.OOBE.Views;
 
 namespace PowerToys.Settings
 {
@@ -25,6 +27,13 @@ namespace PowerToys.Settings
         public OobeWindow()
         {
             InitializeComponent();
+            OobeShellPage.SetCloseOobeWindowCallback(() =>
+            {
+                App.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    inst.Close();
+                }));
+            });
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -41,6 +50,12 @@ namespace PowerToys.Settings
             }
 
             inst = this;
+        }
+
+        protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+        {
+            base.OnMouseLeftButtonDown(e);
+            this.DragMove();
         }
     }
 }

@@ -8,7 +8,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Loaded="UserControl_Loaded">
+    Loaded="UserControl_Loaded"
+    BorderThickness="1">
 
     <UserControl.Resources>
         <DataTemplate x:Key="NavigationViewMenuItem" x:DataType="localModels:OobePowerToysModule">
@@ -19,7 +20,7 @@
             </winui:NavigationViewItem>
         </DataTemplate>
     </UserControl.Resources>
-    
+
     <Grid>
         <winui:NavigationView IsSettingsVisible="False"
                         IsPaneToggleButtonVisible="False"
@@ -41,7 +42,21 @@
                 </StackPanel>
             </winui:NavigationView.PaneCustomContent>
             <winui:NavigationView.Content>
-                <Frame x:Name="NavigationFrame" />
+                <Canvas>
+                    <Button 
+                        x:Name="CloseButton" 
+                        Click="CloseButton_Click"
+                        Canvas.Top="0" 
+                        Canvas.Left="770"
+                        Canvas.ZIndex="2"
+                        Background="Transparent">
+                        <FontIcon 
+                            FontFamily="Segoe MDL2 Assets" 
+                            Glyph="&#xE711;"/>
+                    </Button>
+
+                    <Frame x:Name="NavigationFrame" Canvas.Left="0" Canvas.Top="0" Canvas.ZIndex="1"/>
+                </Canvas>
             </winui:NavigationView.Content>
         </winui:NavigationView>
     </Grid>

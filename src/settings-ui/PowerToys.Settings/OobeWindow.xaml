@@ -12,8 +12,9 @@
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         Loaded="Window_Loaded"
-        Closed="Window_Closed">
+        Closed="Window_Closed"
+        WindowStyle="None">
     <Grid>
-        <xaml:WindowsXamlHost InitialTypeName="Microsoft.PowerToys.Settings.UI.OOBE.Views.OobeShellPage" />
+        <xaml:WindowsXamlHost InitialTypeName="Microsoft.PowerToys.Settings.UI.OOBE.Views.OobeShellPage"/>
     </Grid>
 </Window>
