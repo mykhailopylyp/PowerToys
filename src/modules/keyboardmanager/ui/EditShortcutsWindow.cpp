@@ -263,7 +263,7 @@ void createEditShortcutsWindow(HINSTANCE hInst, KeyboardManagerState& keyboardMa
     addShortcut.Content(plusSymbol);
     addShortcut.Margin({ 10, 10, 0, 25 });
     Logger::warn("Register handler for plus click");
-    addShortcut.Click([&shortcutTable, &keyboardRemapControlObjects, &scrollViewer](winrt::Windows::Foundation::IInspectable const& sender, RoutedEventArgs const&) {
+    auto eventToken = addShortcut.Click([&shortcutTable, &keyboardRemapControlObjects, &scrollViewer](winrt::Windows::Foundation::IInspectable const& sender, RoutedEventArgs const&) {
         try
         {
             Logger::warn("Add shortcut callback");
@@ -282,6 +282,15 @@ void createEditShortcutsWindow(HINSTANCE hInst, KeyboardManagerState& keyboardMa
             Logger::error("{} {}", __FILE__, __LINE__);
         }
     });
+    
+    if (eventToken.value)
+    {
+        Logger::warn("successfully registered click event");
+    }
+    else
+    {
+        Logger::warn("unsuccessfully registered click event. Error {}", GetLastError());
+    }
 
     // Set accessible name for the add shortcut button
     addShortcut.SetValue(Automation::AutomationProperties::NameProperty(), box_value(GET_RESOURCE_STRING(IDS_ADD_SHORTCUT_BUTTON)));
