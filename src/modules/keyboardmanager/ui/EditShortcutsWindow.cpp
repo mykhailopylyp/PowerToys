@@ -262,7 +262,8 @@ void createEditShortcutsWindow(HINSTANCE hInst, KeyboardManagerState& keyboardMa
     plusSymbol.Glyph(L"\xE109");
     addShortcut.Content(plusSymbol);
     addShortcut.Margin({ 10, 10, 0, 25 });
-    addShortcut.Click([&](winrt::Windows::Foundation::IInspectable const& sender, RoutedEventArgs const&) {
+    Logger::warn("Register handler for plus click");
+    addShortcut.Click([&shortcutTable, &keyboardRemapControlObjects, &scrollViewer](winrt::Windows::Foundation::IInspectable const& sender, RoutedEventArgs const&) {
         try
         {
             Logger::warn("Add shortcut callback");
@@ -327,6 +328,7 @@ void createEditShortcutsWindow(HINSTANCE hInst, KeyboardManagerState& keyboardMa
         UpdateWindow(_hWndEditShortcutsWindow);
     }
 
+    Logger::warn("Before message loop");
     // Message loop:
     xamlBridge.MessageLoop();
 
