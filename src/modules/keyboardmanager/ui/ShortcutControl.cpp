@@ -14,30 +14,43 @@ RemapBuffer ShortcutControl::shortcutRemapBuffer;
 
 ShortcutControl::ShortcutControl(StackPanel table, StackPanel row, const int colIndex, TextBox targetApp)
 {
+    _TRACE_;
     shortcutDropDownStackPanel = StackPanel();
+    _TRACE_;
     typeShortcut = Button();
+    _TRACE_;
     shortcutControlLayout = StackPanel();
+    _TRACE_;
     bool isHybridControl = colIndex == 1 ? true : false;
-
+    _TRACE_;
     shortcutDropDownStackPanel.as<StackPanel>().Spacing(KeyboardManagerConstants::ShortcutTableDropDownSpacing);
+    _TRACE_;
     shortcutDropDownStackPanel.as<StackPanel>().Orientation(Windows::UI::Xaml::Controls::Orientation::Horizontal);
-
+    _TRACE_;
     typeShortcut.as<Button>().Content(winrt::box_value(GET_RESOURCE_STRING(IDS_TYPE_BUTTON)));
+    _TRACE_;
     typeShortcut.as<Button>().Width(KeyboardManagerConstants::ShortcutTableDropDownWidth);
+    _TRACE_;
     typeShortcut.as<Button>().Click([&, table, row, colIndex, isHybridControl, targetApp](winrt::Windows::Foundation::IInspectable const& sender, RoutedEventArgs const&) {
         keyboardManagerState->SetUIState(KeyboardManagerUIState::DetectShortcutWindowActivated, EditShortcutsWindowHandle);
+
         // Using the XamlRoot of the typeShortcut to get the root of the XAML host
         createDetectShortcutWindow(sender, sender.as<Button>().XamlRoot(), *keyboardManagerState, colIndex, table, keyDropDownControlObjects, row, targetApp, isHybridControl, false, EditShortcutsWindowHandle, shortcutRemapBuffer);
     });
+    _TRACE_;
     // Set an accessible name for the type shortcut button
     typeShortcut.as<Button>().SetValue(Automation::AutomationProperties::NameProperty(), box_value(GET_RESOURCE_STRING(IDS_TYPE_BUTTON)));
-
+    _TRACE_;
     shortcutControlLayout.as<StackPanel>().Spacing(KeyboardManagerConstants::ShortcutTableDropDownSpacing);
-
+    _TRACE_;
     shortcutControlLayout.as<StackPanel>().Children().Append(typeShortcut.as<Button>());
+    _TRACE_;
     shortcutControlLayout.as<StackPanel>().Children().Append(shortcutDropDownStackPanel.as<StackPanel>());
+    _TRACE_;
     KeyDropDownControl::AddDropDown(table, row, shortcutDropDownStackPanel.as<StackPanel>(), colIndex, shortcutRemapBuffer, keyDropDownControlObjects, targetApp, isHybridControl, false);
+    _TRACE_;
     shortcutControlLayout.as<StackPanel>().UpdateLayout();
+    _TRACE_;
 }
 
 // Function to set the accessible name of the target App text box
@@ -72,12 +85,19 @@ void ShortcutControl::AddNewShortcutControlRow(StackPanel& parent, std::vector<s
     StackPanel row = StackPanel();
     try
     {
+        _TRACE_;
         parent.Children().Append(row);
+        _TRACE_;
         newrow.emplace_back(std::make_unique<ShortcutControl>(parent, row, 0, targetAppTextBox));
+        _TRACE_;
         newrow.emplace_back(std::make_unique<ShortcutControl>(parent, row, 1, targetAppTextBox));
+        _TRACE_;
         keyboardRemapControlObjects.push_back(std::move(newrow));
+        _TRACE_;
         row.Padding({ 10, 10, 10, 10 });
+        _TRACE_;
         row.Orientation(Orientation::Horizontal);
+        _TRACE_;
     }
     catch (...)
     {

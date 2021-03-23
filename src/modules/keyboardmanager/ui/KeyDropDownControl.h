@@ -58,7 +58,9 @@ public:
     KeyDropDownControl(bool isShortcut, bool fromAddShortcutToControl = false, bool renderDisable = false) :
         ignoreKeyToShortcutWarning(fromAddShortcutToControl)
     {
+        _TRACE_;
         SetDefaultProperties(isShortcut, renderDisable);
+        _TRACE_;
     }
 
     // Function to set selection handler for single key remap drop down. Needs to be called after the constructor since the singleKeyControl StackPanel is null if called in the constructor

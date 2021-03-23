@@ -28,3 +28,7 @@ using namespace Windows::UI::Xaml::Hosting;
 using namespace Windows::Foundation::Numerics;
 using namespace Windows::UI::Xaml;
 using namespace Windows::UI::Xaml::Controls;
+
+void traceFunction(std::string file, long line);
+
+#define _TRACE_ traceFunction(__FILE__, __LINE__)

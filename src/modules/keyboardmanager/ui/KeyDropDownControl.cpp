@@ -29,60 +29,88 @@ void KeyDropDownControl::SetSelectedValue(std::wstring value)
 // Get keys name list depending if Disable is in dropdown
 std::vector<std::pair<DWORD, std::wstring>> KeyDropDownControl::GetKeyList(bool isShortcut, bool renderDisable)
 {
+    _TRACE_;
     auto list = keyboardManagerState->keyboardMap.GetKeyNameList(isShortcut);
+    _TRACE_;
     if (renderDisable)
     {
+        _TRACE_;
         list.insert(list.begin(), { CommonSharedConstants::VK_DISABLED, keyboardManagerState->keyboardMap.GetKeyName(CommonSharedConstants::VK_DISABLED) });
+        _TRACE_;
     }
 
+    _TRACE_;
     return list;
 }
 
 // Function to set properties apart from the SelectionChanged event handler
 void KeyDropDownControl::SetDefaultProperties(bool isShortcut, bool renderDisable)
 {
+    _TRACE_;
     dropDown = ComboBox();
+    _TRACE_;
     warningFlyout = Flyout();
+    _TRACE_;
     warningMessage = TextBlock();
+    _TRACE_;
 
     if (!isShortcut)
     {
+        _TRACE_;
         dropDown.as<ComboBox>().Width(KeyboardManagerConstants::RemapTableDropDownWidth);
+        _TRACE_;
     }
     else
     {
+        _TRACE_;
         dropDown.as<ComboBox>().Width(KeyboardManagerConstants::ShortcutTableDropDownWidth);
+        _TRACE_;
     }
+
+    _TRACE_;
     dropDown.as<ComboBox>().MaxDropDownHeight(KeyboardManagerConstants::TableDropDownHeight);
+    _TRACE_;
     // Initialise layout attribute
     previousLayout = GetKeyboardLayout(0);
+    _TRACE_;
     dropDown.as<ComboBox>().SelectedValuePath(L"DataContext");
+    _TRACE_;
     dropDown.as<ComboBox>().ItemsSource(KeyboardManagerHelper::ToBoxValue(GetKeyList(isShortcut, renderDisable)));
-
+    _TRACE_;
     // drop down open handler - to reload the items with the latest layout
     dropDown.as<ComboBox>().DropDownOpened([&, isShortcut](winrt::Windows::Foundation::IInspectable const& sender, auto args) {
+        _TRACE_;
         ComboBox currentDropDown = sender.as<ComboBox>();
         CheckAndUpdateKeyboardLayout(currentDropDown, isShortcut, renderDisable);
     });
 
+    _TRACE_;
     // Attach flyout to the drop down
     warningFlyout.as<Flyout>().Content(warningMessage.as<TextBlock>());
-
+    _TRACE_;
     // Enable narrator for Content of FlyoutPresenter. For details https://docs.microsoft.com/en-us/uwp/api/windows.ui.xaml.controls.flyout?view=winrt-19041#accessibility
     Style style = Style(winrt::xaml_typename<FlyoutPresenter>());
+    _TRACE_;
     style.Setters().Append(Setter(Windows::UI::Xaml::Controls::Control::IsTabStopProperty(), winrt::box_value(true)));
+    _TRACE_;
     style.Setters().Append(Setter(Windows::UI::Xaml::Controls::Control::TabNavigationProperty(), winrt::box_value(Windows::UI::Xaml::Input::KeyboardNavigationMode::Cycle)));
+    _TRACE_;
     warningFlyout.as<Flyout>().FlyoutPresenterStyle(style);
+    _TRACE_;
     dropDown.as<ComboBox>().ContextFlyout().SetAttachedFlyout((FrameworkElement)dropDown.as<ComboBox>(), warningFlyout.as<Flyout>());
+    _TRACE_;
     // To set the accessible name of the combo-box (by default index 1)
     SetAccessibleNameForComboBox(dropDown.as<ComboBox>(), 1);
+    _TRACE_;
 }
 
 // Function to set accessible name for combobox
 void KeyDropDownControl::SetAccessibleNameForComboBox(ComboBox dropDown, int index)
 {
+    _TRACE_;
     // Display name with drop down index (where this indexing will start from 1) - Used by narrator
     dropDown.SetValue(Automation::AutomationProperties::NameProperty(), box_value(GET_RESOURCE_STRING(IDS_KEY_DROPDOWN_COMBOBOX) + L" " + std::to_wstring(index)));
+    _TRACE_;
 }
 
 // Function to check if the layout has changed and accordingly update the drop down list
@@ -217,7 +245,9 @@ std::pair<KeyboardManagerHelper::ErrorType, int> KeyDropDownControl::ValidateSho
 // Function to set selection handler for shortcut drop down. Needs to be called after the constructor since the shortcutControl StackPanel is null if called in the constructor
 void KeyDropDownControl::SetSelectionHandler(StackPanel& table, StackPanel row, StackPanel parent, int colIndex, RemapBuffer& shortcutRemapBuffer, std::vector<std::unique_ptr<KeyDropDownControl>>& keyDropDownControlObjects, TextBox& targetApp, bool isHybridControl, bool isSingleKeyWindow)
 {
+    _TRACE_;
     auto onSelectionChange = [&, table, row, colIndex, parent, targetApp, isHybridControl, isSingleKeyWindow](winrt::Windows::Foundation::IInspectable const& sender) {
+        _TRACE_;
         std::pair<KeyboardManagerHelper::ErrorType, int> validationResult = ValidateShortcutSelection(table, row, parent, colIndex, shortcutRemapBuffer, keyDropDownControlObjects, targetApp, isHybridControl, isSingleKeyWindow);
 
         // Check if the drop down row index was identified from the return value of validateSelection
@@ -281,19 +311,24 @@ void KeyDropDownControl::SetSelectionHandler(StackPanel& table, StackPanel row, 
         }
     };
 
+    _TRACE_;
     // Rather than on every selection change (which gets triggered on searching as well) we set the handler only when the drop down is closed
     dropDown.as<ComboBox>().DropDownClosed([onSelectionChange](winrt::Windows::Foundation::IInspectable const& sender, auto const& args) {
+        _TRACE_;
         onSelectionChange(sender);
     });
-
+    _TRACE_;
     // We check if the selection changed was triggered while the drop down was closed. This is required to handle Type key, initial loading of remaps and if the user just types in the combo box without opening it
     dropDown.as<ComboBox>().SelectionChanged([onSelectionChange](winrt::Windows::Foundation::IInspectable const& sender, SelectionChangedEventArgs const& args) {
+        _TRACE_;
         ComboBox currentDropDown = sender.as<ComboBox>();
         if (!currentDropDown.IsDropDownOpen())
         {
             onSelectionChange(sender);
         }
     });
+
+    _TRACE_;
 }
 
 // Function to return the combo box element of the drop down
@@ -305,15 +340,22 @@ ComboBox KeyDropDownControl::GetComboBox()
 // Function to add a drop down to the shortcut stack panel
 void KeyDropDownControl::AddDropDown(StackPanel& table, StackPanel row, StackPanel parent, const int colIndex, RemapBuffer& shortcutRemapBuffer, std::vector<std::unique_ptr<KeyDropDownControl>>& keyDropDownControlObjects, TextBox targetApp, bool isHybridControl, bool isSingleKeyWindow, bool ignoreWarning)
 {
+    _TRACE_;
     keyDropDownControlObjects.emplace_back(std::make_unique<KeyDropDownControl>(true, ignoreWarning, colIndex == 1));
+    _TRACE_;
     parent.Children().Append(keyDropDownControlObjects[keyDropDownControlObjects.size() - 1]->GetComboBox());
+    _TRACE_;
     uint32_t index;
+    _TRACE_;
     bool found = table.Children().IndexOf(row, index);
+    _TRACE_;
     keyDropDownControlObjects[keyDropDownControlObjects.size() - 1]->SetSelectionHandler(table, row, parent, colIndex, shortcutRemapBuffer, keyDropDownControlObjects, targetApp, isHybridControl, isSingleKeyWindow);
+    _TRACE_;
     parent.UpdateLayout();
-
+    _TRACE_;
     // Update accessible name
     SetAccessibleNameForComboBox(keyDropDownControlObjects[keyDropDownControlObjects.size() - 1]->GetComboBox(), (int)keyDropDownControlObjects.size());
+    _TRACE_;
 }
 
 // Function to get the list of key codes from the shortcut combo box stack panel
