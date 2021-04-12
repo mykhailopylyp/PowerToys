@@ -21,7 +21,7 @@ using Wox.Plugin.Logger;
 
 namespace Microsoft.Plugin.Indexer
 {
-    internal class Main : ISettingProvider, IPlugin, ISavable, IPluginI18n, IContextMenu, IDisposable, IDelayedExecutionPlugin
+    internal class Main : ISettingProvider, IPlugin, ISavable, IPluginI18n, IContextMenu, IDisposable
     {
         private const string DisableDriveDetectionWarning = nameof(DisableDriveDetectionWarning);
         private static readonly IFileSystem _fileSystem = new FileSystem();
@@ -72,7 +72,7 @@ namespace Microsoft.Plugin.Indexer
 
         // This function uses the Windows indexer and returns the list of results obtained
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "We want to keep the process alive but will log the exception")]
-        public List<Result> Query(Query query, bool isFullQuery)
+        public List<Result> Query(Query query)
         {
             var results = new List<Result>();
 
@@ -110,7 +110,7 @@ namespace Microsoft.Plugin.Indexer
                         var searchResultsList = _api.Search(searchQuery, searchManager, maxCount: _settings.MaxSearchCount).ToList();
 
                         // If the delayed execution query is not required (since the SQL query is fast) return empty results
-                        if (searchResultsList.Count == 0 && isFullQuery)
+                        if (searchResultsList.Count == 0)
                         {
                             return new List<Result>();
                         }
@@ -170,13 +170,6 @@ namespace Microsoft.Plugin.Indexer
             }
 
             return results;
-        }
-
-        // This function uses the Windows indexer and returns the list of results obtained. This version is required to implement the interface
-        public List<Result> Query(Query query)
-        {
-            // All plugins have to implement IPlugin interface. We return empty collection as we do not want any computation with constant search plugins.
-            return new List<Result>();
         }
 
         public void Init(PluginInitContext context)
