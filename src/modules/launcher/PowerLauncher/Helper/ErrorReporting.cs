@@ -46,11 +46,7 @@ namespace PowerLauncher.Helper
 
         public static void UnhandledExceptionHandle(object sender, UnhandledExceptionEventArgs e)
         {
-            // handle non-ui thread exceptions
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
-            {
-                Report((Exception)e?.ExceptionObject, true);
-            });
+            Report((Exception)e?.ExceptionObject, true);
         }
 
         public static void DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

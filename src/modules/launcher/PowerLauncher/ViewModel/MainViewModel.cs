@@ -569,17 +569,20 @@ namespace PowerLauncher.ViewModel
                                 // Using CurrentCultureIgnoreCase since this is user facing
                                 if (queryText.Equals(_currentQuery, StringComparison.CurrentCultureIgnoreCase))
                                 {
-                                    Results.Clear();
-                                    foreach (var p in resultPluginPair)
+                                    Dispatcher.CurrentDispatcher.Invoke(() =>
                                     {
-                                        UpdateResultView(p.Item1, queryText, currentCancellationToken);
-                                        currentCancellationToken.ThrowIfCancellationRequested();
-                                    }
+                                        Results.Clear();
+                                        foreach (var p in resultPluginPair)
+                                        {
+                                            UpdateResultView(p.Item1, queryText, currentCancellationToken);
+                                            currentCancellationToken.ThrowIfCancellationRequested();
+                                        }
 
-                                    currentCancellationToken.ThrowIfCancellationRequested();
-                                    numResults = Results.Results.Count;
-                                    Results.Sort();
-                                    Results.SelectedItem = Results.Results.FirstOrDefault();
+                                        currentCancellationToken.ThrowIfCancellationRequested();
+                                        numResults = Results.Results.Count;
+                                        Results.Sort();
+                                        Results.SelectedItem = Results.Results.FirstOrDefault();
+                                    });
                                 }
                             }
 
@@ -606,18 +609,20 @@ namespace PowerLauncher.ViewModel
                                                 if (queryText.Equals(_currentQuery, StringComparison.CurrentCultureIgnoreCase))
                                                 {
                                                     currentCancellationToken.ThrowIfCancellationRequested();
+                                                    Dispatcher.CurrentDispatcher.Invoke(() =>
+                                                    {
+                                                        // Remove the original results from the plugin
+                                                        Results.Results.RemoveAll(r => r.Result.PluginID == plugin.Metadata.ID);
+                                                        currentCancellationToken.ThrowIfCancellationRequested();
 
-                                                    // Remove the original results from the plugin
-                                                    Results.Results.RemoveAll(r => r.Result.PluginID == plugin.Metadata.ID);
-                                                    currentCancellationToken.ThrowIfCancellationRequested();
+                                                        // Add the new results from the plugin
+                                                        UpdateResultView(results, queryText, currentCancellationToken);
 
-                                                    // Add the new results from the plugin
-                                                    UpdateResultView(results, queryText, currentCancellationToken);
-
-                                                    currentCancellationToken.ThrowIfCancellationRequested();
-                                                    numResults = Results.Results.Count;
-                                                    Results.Sort();
-                                                    Results.SelectedItem = Results.Results.FirstOrDefault();
+                                                        currentCancellationToken.ThrowIfCancellationRequested();
+                                                        numResults = Results.Results.Count;
+                                                        Results.Sort();
+                                                        Results.SelectedItem = Results.Results.FirstOrDefault();
+                                                    });
                                                 }
                                             }
 
